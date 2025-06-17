@@ -60,9 +60,12 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => {
   console.log('MongoDB connected');
 
-  server.listen(process.env.PORT, () => {
-    console.log(`Server with Socket.IO running on port ${process.env.PORT}`);
-  });
+  const PORT = process.env.PORT || 5000;
+
+server.listen(PORT, () => {
+  console.log(`Server with Socket.IO running on port ${PORT}`);
+});
+
 })
 .catch((err) => {
   console.error('MongoDB connection error:', err);
