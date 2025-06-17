@@ -5,8 +5,8 @@ const Subscription = require('../models/Subscription');
 exports.getUserProfileData = async (req, res) => {
   try {
     const userId = req.params.id;
-    const posts = await Post.find({ creator: userId });
-     const requests = await Request.find({ creator: userId });;
+    const posts = await Post.find({ user: userId });
+     const requests = await Request.find({ user: userId });;
     res.json({ posts, requests });
   } catch (err) {
     res.status(500).json({ error: 'Помилка завантаження профілю' });

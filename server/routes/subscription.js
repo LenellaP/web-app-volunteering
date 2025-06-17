@@ -1,64 +1,44 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/authMiddleware');
-const Subscription = require('../models/Subscription');
 const {
   subscribeToUser,
-  getSubscriptions
+  getSubscriptions,
+  checkSubscription
 } = require('../controllers/subscriptionController');
-
-const checkSubscription = async (req, res) => {
-  try {
-    const existing = await Subscription.findOne({
-      subscriber: req.userId,
-      targetUser: req.params.id
-    });
-
-    res.json({ subscribed: !!existing });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-router.post('/:id', auth, subscribeToUser);
-router.get('/', auth, getSubscriptions);
-// Маршрут
-router.get('/check/:id', auth, checkSubscription);
+const Subscription = require('../models/Subscription');
+const User = require('../models/User');
+const Post = require('../models/Post');
 
 // Підписка на користувача
-router.post('/:followedId', auth, async (req, res) => {
-  try {
-    const existing = await Subscription.findOne({ follower: req.userId, followed: req.params.followedId });
-    if (existing) return res.status(400).json({ message: 'Already subscribed' });
+router.post('/:id', auth, subscribeToUser);
 
-    const newSub = new Subscription({
-      follower: req.userId,
-      followed: req.params.followedId
-    });
-    await newSub.save();
-    res.json({ message: 'Subscribed' });
-  } catch (err) {
-    res.status(500).json({ message: 'Error subscribing' });
-  }
-});
+// Отримати список підписок
+router.get('/', auth, getSubscriptions);
 
-// Перевірка підписки
-router.get('/check/:followedId', auth, async (req, res) => {
-  const exists = await Subscription.exists({ follower: req.userId, followed: req.params.followedId });
-  res.json({ subscribed: !!exists });
-});
+// Перевірка чи підписаний
 router.get('/check/:id', auth, checkSubscription);
 
-router.get('/check/:id', auth, async (req, res) => {
+router.get('/my-subscriptions/posts', auth, async (req, res) => {
   try {
-    const existing = await Subscription.findOne({
-      subscriber: req.userId,
-      targetUser: req.params.id
-    });
+    const subs = await Subscription.find({ follower: req.userId }).populate('followed');
+    
+    const results = await Promise.all(subs.map(async (sub) => {
+      const latestPost = await Post.findOne({ user: sub.followed._id }).sort({ createdAt: -1 });
+      return {
+        username: sub.followed.name || sub.followed.email,
+        userId: sub.followed._id,
+        latestPost: latestPost ? {
+          title: latestPost.title,
+          _id: latestPost._id
+        } : null
+      };
+    }));
 
-    res.json({ subscribed: !!existing });
+    res.json(results);
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Помилка отримання підписок:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

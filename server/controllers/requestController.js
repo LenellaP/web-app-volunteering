@@ -25,6 +25,7 @@ exports.createRequest = async (req, res) => {
   }
 });
 
+
     res.status(201).json(request);
   } catch (err) {
     res.status(500).json({ message: 'Error creating request' });
@@ -53,7 +54,7 @@ exports.getMyRequests = async (req, res) => {
 exports.getRequestsByUser = async (req, res) => {
   try {
     const userId = req.params.id;
-    const requests = await Request.find({ creator: userId }); 
+    const requests = await Request.find({ user: userId }); 
     res.json(requests);
   } catch (err) {
     res.status(500).json({ error: 'Помилка отримання запитів користувача' });

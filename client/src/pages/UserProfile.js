@@ -17,28 +17,53 @@ const UserProfile = () => {
     axios.get(`/api/requests/user/${userId}`).then(res => setRequests(res.data));
 
     if (token) {
-      axios.get(`/api/subscriptions/check/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(res => setSubscribed(res.data.subscribed))
-      .catch(err => console.error('Помилка перевірки підписки', err));
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      axios.get(`/api/subscriptions/check/${userId}`, config)
+        .then(res => setSubscribed(res.data.subscribed))
+        .catch(err => {
+          console.error('Помилка перевірки підписки:', err.response?.data || err.message);
+        });
+    } else {
+      console.warn('Token відсутній — користувач неавторизований');
     }
   }, [userId]);
 
-  const handleSubscribe = () => {
-    axios.post(`/api/subscriptions/${userId}`, {}, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(() => setSubscribed(true));
-  };
+const handleSubscribe = () => {
+  if (!token) {
+    alert("Будь ласка, увійдіть у систему, щоб підписатися.");
+    return;
+  }
+
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  axios.post(`/api/subscriptions/${userId}`, {}, config)
+    .then(() => {
+      alert('Підписка успішна!');
+      setSubscribed(true);
+    })
+    .catch(err => {
+      console.error('Помилка під час підписки:', err.response?.data || err.message);
+
+      const message = err.response?.data?.message || 'Невідома помилка при підписці';
+      alert(`Не вдалося підписатися. Сервер відповів: ${message}`);
+    });
+};
+
 
   return (
     <div className="container py-5">
       <h3 className="mb-4 text-center">Профіль користувача</h3>
-      {!subscribed && (
+
+      {!subscribed && token && (
         <div className="text-center mb-4">
           <button className="btn btn-primary" onClick={handleSubscribe}>
             Підписатися
           </button>
+        </div>
+      )}
+
+      {!token && (
+        <div className="alert alert-warning text-center">
+          Щоб підписатися, увійдіть у свій обліковий запис.
         </div>
       )}
 

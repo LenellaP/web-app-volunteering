@@ -20,10 +20,7 @@ const handleSubmit = async e => {
   const token = localStorage.getItem('token');
 
   try {
-    await axios.post('/api/requests', {
-      ...formData,
-      creator: JSON.parse(localStorage.getItem('user'))._id  // <--- додано creator
-    }, {
+    await axios.post('/api/requests', formData, {
       headers: { Authorization: `Bearer ${token}` }
     });
     navigate('/requests');
@@ -31,6 +28,7 @@ const handleSubmit = async e => {
     alert('Помилка створення запиту');
   }
 };
+
 
 
   return (

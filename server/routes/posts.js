@@ -13,6 +13,5 @@ router.delete('/:id', auth, deletePost);
 router.get('/user/:id', getPostsByUser); 
 router.post('/', auth, createPost);
 router.get('/', getPosts);
-router.get('/mine', auth, getMyPosts);
 
 module.exports = router;

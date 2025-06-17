@@ -24,7 +24,7 @@ const Navbar = () => {
                   <Link className="nav-link" to="/profile">Профіль</Link>
                 </li>
                 <li className="nav-item">
-                <Link to="/my-chats">Мої чати</Link>
+                  <Link className="nav-link" to="/my-chats">Мої чати</Link>
                 </li>
 
                 <li className="nav-item">

@@ -4,27 +4,28 @@ import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
   const [myPosts, setMyPosts] = useState([]);
-  const navigate = useNavigate();
   const [myRequests, setMyRequests] = useState([]);
-
-useEffect(() => {
+  const [subscriptions, setSubscriptions] = useState([]);
+  const navigate = useNavigate();
   const token = localStorage.getItem('token');
 
-  axios.get('/api/posts/mine', {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-    .then(res => setMyPosts(res.data))
-    .catch(err => console.error('Помилка завантаження оголошень', err));
+  useEffect(() => {
+    if (!token) return;
 
-  axios.get('/api/requests/mine', {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-    .then(res => setMyRequests(res.data))
-    .catch(err => console.error('Помилка завантаження запитів', err));
-}, []);
+    axios.get('/api/posts/mine', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => setMyPosts(res.data));
+
+    axios.get('/api/requests/mine', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => setMyRequests(res.data));
+
+    axios.get('/api/subscriptions', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => setSubscriptions(res.data));
+  }, []);
 
   const handleDelete = async (postId) => {
-    const token = localStorage.getItem('token');
     try {
       await axios.delete(`/api/posts/${postId}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -51,43 +52,56 @@ useEffect(() => {
                   <span className="badge bg-secondary">{post.category}</span>
                 </div>
                 <div className="card-footer d-flex justify-content-between">
-                  <button
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={() => navigate(`/edit/${post._id}`)}
-                  >
-                    Редагувати
-                  </button>
-                  <button
-                    className="btn btn-outline-danger btn-sm"
-                    onClick={() => handleDelete(post._id)}
-                  >
-                    Видалити
-                  </button>
+                  <button className="btn btn-outline-primary btn-sm" onClick={() => navigate(`/edit/${post._id}`)}>Редагувати</button>
+                  <button className="btn btn-outline-danger btn-sm" onClick={() => handleDelete(post._id)}>Видалити</button>
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
-      <h2 className="mt-5 mb-3 text-center">Мої запити на допомогу</h2>
-          {myRequests.length === 0 ? (
-            <p className="text-center">У вас ще немає запитів.</p>
-            ) : (
-  <div className="row">
-    {myRequests.map(req => (
-      <div key={req._id} className="col-md-6 col-lg-4 mb-4">
-        <div className="card h-100 border-info">
-          <div className="card-body">
-            <h5 className="card-title">{req.title}</h5>
-            <p className="card-text">{req.description}</p>
-            <small className="text-muted">{req.location} | {new Date(req.date).toLocaleDateString()}</small>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-)}
 
+      <h2 className="mt-5 mb-3 text-center">Мої запити на допомогу</h2>
+      {myRequests.length === 0 ? (
+        <p className="text-center">У вас ще немає запитів.</p>
+      ) : (
+        <div className="row">
+          {myRequests.map(req => (
+            <div key={req._id} className="col-md-6 col-lg-4 mb-4">
+              <div className="card h-100 border-info">
+                <div className="card-body">
+                  <h5 className="card-title">{req.title}</h5>
+                  <p className="card-text">{req.description}</p>
+                  <small className="text-muted">{req.location} | {new Date(req.date).toLocaleDateString()}</small>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <h2 className="mt-5 mb-3 text-center">Мої підписки</h2>
+      {subscriptions.length === 0 ? (
+        <p className="text-center">Ви ще не підписані на інших користувачів.</p>
+      ) : (
+        <ul className="list-group">
+  {subscriptions.map((sub, i) => (
+  sub.followed ? (
+    <li key={i} className="list-group-item d-flex justify-content-between align-items-center">
+      <span>{sub.followed.username} ({sub.followed.email})</span>
+      <button
+        className="btn btn-sm btn-outline-primary"
+        onClick={() => navigate(`/profile/${sub.followed._id}`)}
+      >
+        Перейти до профілю
+      </button>
+    </li>
+  ) : null
+))}
+
+</ul>
+
+      )}
     </div>
   );
 };
